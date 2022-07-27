@@ -1,0 +1,1 @@
+## Contents will be stored in S3 under chips-db-batch-configs - empty file added for use in local dev environments
