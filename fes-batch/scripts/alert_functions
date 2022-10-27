@@ -1,0 +1,61 @@
+#######################################################
+#
+# This file contains only functions for email alerts
+#
+#######################################################
+
+LOCATION_STRING="Sent from: ${ENVIRONMENT_LABEL} - ${T3_HOST_FQDN} - EC2 instance ID ${EC2_INSTANCE_ID} (${APP_INSTANCE_NAME})"
+
+## returns 1 if variable EMAIL_ADDRESS_FES is unset or a blank string, otherwise 0
+
+check_email_address_defined_f ()
+{
+  if [ -z "${EMAIL_ADDRESS_FES}" ]; then
+    echo `date`": Unable to send email alert - no address set in EMAIL_ADDRESS_FES."
+    return 1
+  fi
+}
+
+##
+## This function will send string via email to FES group.
+## This function accepts accepts two arguments.
+##
+## First is subject as an enclosed string .
+## Second is body text as an enclosed string .
+##
+## Example:
+##  email_FES_group_f "Disk Space high on chpwlo-pl3" "Please check disk space on Weblogic Servers"
+
+email_FES_group_f ()
+{
+  if check_email_address_defined_f; then
+    echo -e "To:${EMAIL_ADDRESS_FES}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    if [[ ${LIVE_ENVIRONMENT} == "true" ]]; then
+      echo -e "To:${EMAIL_ADDRESS_SERVICE_NOW}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    fi
+  fi
+}
+
+email_report_FES_group_f ()
+{
+  if check_email_address_defined_f; then
+     echo -e "To:${EMAIL_ADDRESS_FES}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Report: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+  fi
+}
+
+##
+## This function will send an email to a list of recipients
+## This function expects three arguments.
+##
+## First is one or more email addresses, separated by commas.
+## Second is the subject as an enclosed string.
+## Third is the body text as an enclosed string.
+##
+## Example:
+##  email_report_f storage@companieshouse.gov.uk,csi@companieshouse.gov.uk "Disk Space high on chpwlo-pl3" "Please check disk space on Weblogic Servers"
+email_report_f ()
+{
+  if check_email_address_defined_f; then
+     echo -e "To:$1\nFrom:${EMAIL_ADDRESS_FES}\nSubject:$2\n\n${LOCATION_STRING}\n\n$3\n\n" | msmtp -t
+  fi
+}
