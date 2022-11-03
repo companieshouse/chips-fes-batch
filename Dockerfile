@@ -10,7 +10,6 @@ RUN yum -y install gettext && \
     yum -y install oracle-instantclient-sqlplus && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     yum -y install msmtp && \
-#    yum -y install xmlstarlet && \
     yum clean all && \
     rm -rf /var/cache/yum
 
@@ -26,7 +25,7 @@ COPY --chown=fes fes-batch ${FES_HOME}/
 # Download the batch libs and set permission on scripts
 RUN mkdir -p ${FES_HOME}/libs && \
     cd ${FES_HOME}/libs && \
-#    curl ${ARTIFACTORY_BASE_URL}/virtual-release/log4j/log4j/1.2.14/log4j-1.2.14.jar -o log4j.jar && \
+    curl ${ARTIFACTORY_BASE_URL}/local-ch-release/uk/gov/companieshouse/fes-file-loader/1.2.0/fes-file-loader-1.2.0.jar -o ../fes-file-loader/fes-file-loader.jar && \
     chmod -R 750 ${FES_HOME}/*
 
 WORKDIR $FES_HOME

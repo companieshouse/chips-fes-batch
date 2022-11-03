@@ -1,0 +1,11 @@
+# JDBC
+jdbc.driverClassName=oracle.jdbc.xa.client.OracleXADataSource
+jdbc.url=${FES_DB_URL}
+jdbc.username=${FES_DB_USER}
+jdbc.password=${FES_DB_PASSWORD}
+wait.before.processing.milliseconds=100000
+
+input.data.folder=/apps/fes/data/Batches_DATA
+input.image.folder=/apps/fes/data/Batches_POST_OCR
+output.data.folder=/apps/fes/data/Batches_DATA_BACKUP
+output.image.folder=/apps/fes/data/Batches_POST_OCR_BACKUP
