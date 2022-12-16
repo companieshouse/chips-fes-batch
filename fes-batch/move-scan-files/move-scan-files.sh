@@ -22,17 +22,10 @@ exec >>${LOG_FILE} 2>&1
 f_logInfo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 f_logInfo "Starting move-scan-files"
 
-BYPASS_OCR=N
-
-#Check if BYPASS OCR argument passed
-if [ "$2" == "Y" ] ; then
-   BYPASS_OCR=Y
-fi
-
 #Adjust docker-compose bind mappings if data dir location changes
 DATA_DIR="/apps/fes/data"
 #if DATA_DIR is not a valid folder
-if ! [ -d $1 ] ; then
+if ! [ -d $DATA_DIR ] ; then
    f_logError "$DATA_DIR is not a valid folder"
    exit 1
 fi
@@ -58,6 +51,9 @@ PRE_OCR_BACKUP_DIR=$DATA_DIR/Batches_PRE_OCR_BACKUP
 #Hot folder - used to move files to ABBYY
 HOT_FOLDER_DIR=$DATA_DIR/Batches_HOTFOLDER2
 
+#Flag to bypass OCR - set to Y to allow processing to continue if ABBYY system unavailable
+BYPASS_OCR=N
+
 #Flag to allow entire batch to be bypassed if it contains a document over page size threshold
 ALLOW_BATCH_BYPASS=N
 
@@ -73,9 +69,6 @@ HOT_FOLDER_DIR1=$DATA_DIR/Batches_HOTFOLDER
 HOT_FOLDER_DIR2=$DATA_DIR/Batches_HOTFOLDER2
 
 PRE_OCR_DIR=$DATA_DIR/Batches_PRE_OCR
-
-#Size threshold for envelope - if greater, form may be attached so fail batch
-ENVELOPE_SIZE_THRESHOLD=18000
 
 #Size threshold for pages - bypass OCR if batch contains a file with more than this variables number of pages
 MAX_PAGE_THRESHOLD=150
@@ -121,6 +114,8 @@ else
 fi
 
 f_logInfo "Hot Folder is set to $HOT_FOLDER_DIR"
+# Capture HOT_FOLDER_DIR starting value in case we need to restore it after a bypassed batch
+HOT_FOLDER_DIR_STARTING_VALUE=$HOT_FOLDER_DIR
 
 for file in `find $PRE_OCR_DIR -name batch.scanned`
 do
@@ -128,134 +123,126 @@ do
    DIRNAME=`dirname $file`
 
    BATCHNAME=`basename $DIRNAME`
-   f_logInfo "=========== Processing batch name " $BATCHNAME '=============='
+   f_logInfo "=========== Processing batch name $BATCHNAME =============="
 
    #Remove  batch.scanned to prevent being copying into HOT Folder
    rm $DIRNAME/batch.scanned
-   #echo "   Removing $DIRNAME/batch.scanned"
+   f_logDebug "   Removing $DIRNAME/batch.scanned"
 
    SCANFOLDER=`dirname $DIRNAME`
-   #echo "  scan folder name is " $SCANFOLDER
+   f_logDebug "  scan folder name is $SCANFOLDER"
 
    SCANNERNAME=`basename $SCANFOLDER`
-   #echo "  scannername  is " $scannername
-
-   #set abandon batch flag
-   ABANDON_BATCH=N;
+   f_logDebug "  scannername  is $scannername"
 
    #Set bypass OCR for batch to N
    BYPASS_OCR_FOR_BATCH="N"
 
-   #If batch not being abandonned
-   if [ $ABANDON_BATCH == "N" ] ; then
-      #Copy contents of batch to pre ocr Backup folder
-      f_logInfo "   Copying $DIRNAME to $PRE_OCR_BACKUP_DIR"
-      f_logInfo "   contents of directory are:"
-      ls -tr $DIRNAME | while IFS= read -r line; do f_logInfo "$line"; done
-      cp -r $DIRNAME $PRE_OCR_BACKUP_DIR/$BATCHNAME
+   #Copy contents of batch to pre ocr Backup folder
+   f_logInfo "   Copying $DIRNAME to $PRE_OCR_BACKUP_DIR"
+   f_logInfo "   contents of directory are:"
+   ls -tr $DIRNAME | while IFS= read -r line; do f_logInfo "$line"; done
+   cp -r $DIRNAME $PRE_OCR_BACKUP_DIR/$BATCHNAME
 
-      # Only check for page threshold if not already bypassing OCR and bypass of batch is allowed
-      if [[ $BYPASS_OCR == "N" ]] && [[ $ALLOW_BATCH_BYPASS == "Y" ]] ; then
+   # Only check for page threshold if not already bypassing OCR and bypass of batch is allowed
+   if [[ $BYPASS_OCR == "N" ]] && [[ $ALLOW_BATCH_BYPASS == "Y" ]] ; then
 
-         f_logDebug "checking if batch can be bypassed ..."
+      f_logDebug "checking if batch can be bypassed ..."
 
-         #Check if we need to bypass this batch because it contains a document with too many pages
-         MAX_PAGES=1
-         FILENAME=$BATCH_DATA_DIR/$BATCHNAME/$DOCINFO
-         if [ -f $FILENAME ] ; then
-            while read -r FOLDER PAGES
-            do
-               #Strip CTRL M chars at end of PAGES if they exists
-               PAGES=${PAGES%$'\r'}
-               f_logDebug "pages is currently set to $PAGES and max pages is $MAX_PAGES"
-               if [[ ! -z $PAGES ]] && [[ $PAGES == +([0-9]) ]] && [[ $PAGES -gt $MAX_PAGES ]] ; then
-                  MAX_PAGES=$PAGES
-               fi
-            done <"$FILENAME"
-         fi
-
-         if [[ $MAX_PAGES -gt $MAX_PAGE_THRESHOLD ]] ; then
-            f_logWarn "Batch $BATCHNAME contains a document with over $MAX_PAGE_THRESHOLD pages - bypassing OCR"
-            BYPASS_OCR_FOR_BATCH="Y"
-            HOT_FOLDER_DIR=$BATCH_POST_OCR_DIR;
-            f_logWarn "Temporarily set HOT_FOLDER to $HOT_FOLDER_DIR"
-         fi
+      #Check if we need to bypass this batch because it contains a document with too many pages
+      MAX_PAGES=1
+      FILENAME=$BATCH_DATA_DIR/$BATCHNAME/$DOCINFO
+      if [ -f $FILENAME ] ; then
+         while read -r FOLDER PAGES
+         do
+            #Strip CTRL M chars at end of PAGES if they exists
+            PAGES=${PAGES%$'\r'}
+            f_logDebug "pages is currently set to $PAGES and max pages is $MAX_PAGES"
+            if [[ ! -z $PAGES ]] && [[ $PAGES == +([0-9]) ]] && [[ $PAGES -gt $MAX_PAGES ]] ; then
+               MAX_PAGES=$PAGES
+            fi
+         done <"$FILENAME"
       fi
 
-      f_logDebug "post BYPASS OCR check - bypass OCR is set to $BYPASS_OCR and bypass OCR for Batch is set to $BYPASS_OCR_FOR_BATCH"
+      if [[ $MAX_PAGES -gt $MAX_PAGE_THRESHOLD ]] ; then
+         f_logWarn "Batch $BATCHNAME contains a document with over $MAX_PAGE_THRESHOLD pages - bypassing OCR"
+         BYPASS_OCR_FOR_BATCH="Y"
+         HOT_FOLDER_DIR=$BATCH_POST_OCR_DIR;
+         f_logWarn "Temporarily set HOT_FOLDER to $HOT_FOLDER_DIR"
+      fi
+   fi
 
-      #if not bypassing OCR (Completely or for the Batch) ...
-      if [[ $BYPASS_OCR == "N" ]] && [[ $BYPASS_OCR_FOR_BATCH == "N" ]] ; then
-         f_logInfo "   moving ENVELOPE and COVLETT folders for $BATCHNAME to $BATCH_POST_OCR_DIR"
-         #Iterate through batch files, moving Envelope and Covering letters
-         #to POST OCR folder and only copy Forms to HOT FOLDER
-         for subfolder in `find $DIRNAME -name "*_*" -type d`
-         do
-            f_logDebug "subfolder being processed is $subfolder"
-            subfile=`basename $subfolder`
-            f_logDebug "subfile is $subfile and batchname is $BATCHNAME"
+   f_logDebug "post BYPASS OCR check - bypass OCR is set to $BYPASS_OCR and bypass OCR for Batch is set to $BYPASS_OCR_FOR_BATCH"
 
-            #Ignore if root folder returned by find command (Happens on some unix systems)
-            if [[ $subfile != $BATCHNAME ]] ; then
-               #Remove leading number
-               suffix=`echo $subfile | cut -f2 -d "_"`
-               #If suffix value is ENVELOPE or COVLETT, move to post OCR folder
-               f_logDebug "suffix is $suffix"
-               if [ "$suffix" == "$ENVELOPE" ] || [ "$suffix" == "$COVLETT" ] ; then
-                  #check if batch folder exists in POST OCR directory - if not, create
-                  if ! [ -d $BATCH_POST_OCR_DIR/$BATCHNAME ] ; then
-                     mkdir $BATCH_POST_OCR_DIR/$BATCHNAME
-                     chmod 777 $BATCH_POST_OCR_DIR/$BATCHNAME
-                  fi
+   #if not bypassing OCR (Completely or for the Batch) ...
+   if [[ $BYPASS_OCR == "N" ]] && [[ $BYPASS_OCR_FOR_BATCH == "N" ]] ; then
+      f_logInfo "   moving ENVELOPE and COVLETT folders for $BATCHNAME to $BATCH_POST_OCR_DIR"
+      #Iterate through batch files, moving Envelope and Covering letters
+      #to POST OCR folder and only copy Forms to HOT FOLDER
+      for subfolder in `find $DIRNAME -name "*_*" -type d`
+      do
+         f_logDebug "subfolder being processed is $subfolder"
+         subfile=`basename $subfolder`
+         f_logDebug "subfile is $subfile and batchname is $BATCHNAME"
 
-                  #Move envelope or covering letter to post OCR folder
-                  f_logDebug "moving $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
-                  mv $subfolder $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
-               else
-                  #Check to move files over a certain size directly to POST_OCR Folder (Bypass OCR)
-                  if [[ "$ALLOW_DOC_BYPASS" == "Y" ]] ; then
+         #Ignore if root folder returned by find command (Happens on some unix systems)
+         if [[ $subfile != $BATCHNAME ]] ; then
+            #Remove leading number
+            suffix=`echo $subfile | cut -f2 -d "_"`
+            #If suffix value is ENVELOPE or COVLETT, move to post OCR folder
+            f_logDebug "suffix is $suffix"
+            if [ "$suffix" == "$ENVELOPE" ] || [ "$suffix" == "$COVLETT" ] ; then
+               #check if batch folder exists in POST OCR directory - if not, create
+               if ! [ -d $BATCH_POST_OCR_DIR/$BATCHNAME ] ; then
+                  mkdir $BATCH_POST_OCR_DIR/$BATCHNAME
+               fi
 
-                     f_logDebug "checking DOC size - subfile is $subfile "
-                     BYPASS_THIS_SUBFOLDER=N
+               #Move envelope or covering letter to post OCR folder
+               f_logDebug "moving $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
+               mv $subfolder $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
+            else
+               #Check to move files over a certain size directly to POST_OCR Folder (Bypass OCR)
+               if [[ "$ALLOW_DOC_BYPASS" == "Y" ]] ; then
 
-                     #Iterate each image file - there should only be 1 per subfolder
-                     for IMAGE_FILE in `find $subfolder -name "*.tif" -type f`
-                     do
-                        f_logDebug "image_file is $IMAGE_FILE"
+                  f_logDebug "checking DOC size - subfile is $subfile "
+                  BYPASS_THIS_SUBFOLDER=N
 
-                        #Get image file size - version below for Solaris
-                        IMAGE_FILE_SIZE=`stat -c %s $IMAGE_FILE`
+                  #Iterate each image file - there should only be 1 per subfolder
+                  for IMAGE_FILE in `find $subfolder -name "*.tif" -type f`
+                  do
+                     f_logDebug "image_file is $IMAGE_FILE"
 
-                        #Get image file size - version below for MacOS
-                        #IMAGE_FILE_SIZE=`stat -f %z $IMAGE_FILE`
+                     #Get image file size - version below for Solaris
+                     IMAGE_FILE_SIZE=`stat -c %s $IMAGE_FILE`
 
-                        f_logDebug "image file size for $IMAGE_FILE is $IMAGE_FILE_SIZE"
+                     #Get image file size - version below for MacOS
+                     #IMAGE_FILE_SIZE=`stat -f %z $IMAGE_FILE`
 
-                        #Check if image size is valid, and if it exeeds to Threshold
-                        if [[ ! -z $IMAGE_FILE_SIZE ]] && [[ $IMAGE_FILE_SIZE == +([0-9]) ]] && [[ $IMAGE_FILE_SIZE -gt $DOC_BYPASS_SIZE_THRESHOLD ]] ; then
-                           f_logDebug "bypassing for subfolder $subfolder as size too big"
-                           BYPASS_THIS_SUBFOLDER=Y
-                        fi
-                     done
+                     f_logDebug "image file size for $IMAGE_FILE is $IMAGE_FILE_SIZE"
 
-                     if [[ $BYPASS_THIS_SUBFOLDER == "Y" ]] ; then
-                        f_logInfo "   bypassing OCR for subfolder $subfile as if contains an image over $DOC_BYPASS_SIZE_THRESHOLD - moving to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
-
-                        #check if batch folder exists in POST OCR directory - if not, create
-                        if ! [ -d $BATCH_POST_OCR_DIR/$BATCHNAME ] ; then
-                        mkdir $BATCH_POST_OCR_DIR/$BATCHNAME
-                           chmod 777 $BATCH_POST_OCR_DIR/$BATCHNAME
-                        fi
-
-                        #Move subfolder to post OCR folder
-                        f_logInfo "   moving" $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
-                        mv $subfolder $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
+                     #Check if image size is valid, and if it exeeds to Threshold
+                     if [[ ! -z $IMAGE_FILE_SIZE ]] && [[ $IMAGE_FILE_SIZE == +([0-9]) ]] && [[ $IMAGE_FILE_SIZE -gt $DOC_BYPASS_SIZE_THRESHOLD ]] ; then
+                        f_logDebug "bypassing for subfolder $subfolder as size too big"
+                        BYPASS_THIS_SUBFOLDER=Y
                      fi
+                  done
+
+                  if [[ $BYPASS_THIS_SUBFOLDER == "Y" ]] ; then
+                     f_logInfo "   bypassing OCR for subfolder $subfile as if contains an image over $DOC_BYPASS_SIZE_THRESHOLD - moving to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
+
+                     #check if batch folder exists in POST OCR directory - if not, create
+                     if ! [ -d $BATCH_POST_OCR_DIR/$BATCHNAME ] ; then
+                     mkdir $BATCH_POST_OCR_DIR/$BATCHNAME
+                     fi
+
+                     #Move subfolder to post OCR folder
+                     f_logInfo "   moving" $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
+                     mv $subfolder $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
                   fi
                fi
             fi
-         done
-      fi
+         fi
+      done
 
       DO_FOLDER_MOVE=Y
 
@@ -276,22 +263,21 @@ do
       if [[ $DO_FOLDER_MOVE == "Y" ]] ; then
          #Move temp folder to HOT folder
          f_logInfo "   moving $PRE_OCR_DIR/$BATCHNAME to $HOT_FOLDER_DIR"
-         #chmod -R 777 $PRE_OCR_DIR/$BATCHNAME
          mv $PRE_OCR_DIR/$BATCHNAME $HOT_FOLDER_DIR
       fi
 
       #If bypassing OCR for batch only, set hot folder back to correct value
       if [[ $BYPASS_OCR_FOR_BATCH == "Y" ]] ; then
-         HOT_FOLDER_DIR=$DATA_DIR/Batches_HOTFOLDER
+         HOT_FOLDER_DIR=$HOT_FOLDER_DIR_STARTING_VALUE
          BYPASS_OCR_FOR_BATCH="N"
          f_logInfo "   setting HOT_FOLDER back to $HOT_FOLDER_DIR"
       fi
 
-      f_logInfo "========== Batch " $BATCHNAME " has been processed ============="
+      f_logInfo "========== Batch $BATCHNAME has been processed ============="
    fi
 done
 
-echo "Starting cleardown of processed batch directories "
+f_logInfo "Starting cleardown of processed batch directories "
 #--------------------------------------#
 # Clear down Batches Data Directory
 #--------------------------------------#
