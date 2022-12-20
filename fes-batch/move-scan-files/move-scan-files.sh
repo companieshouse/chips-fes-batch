@@ -243,38 +243,39 @@ do
             fi
          fi
       done
-
-      DO_FOLDER_MOVE=Y
-
-      #If allowing Docs to be bypassed, check there are any files to OCR before moving to HOT FOLDER
-      if [[ $BYPASS_OCR_FOR_BATCH == "N" ]] && [[ $ALLOW_DOC_BYPASS == "Y" ]] ; then
-         f_logDebug "batch not being bypassed and allow doc bypass is true - checking if any files need processing ..."
-         FILES_IN_DIR_COUNT=`ls $PRE_OCR_DIR/$BATCHNAME | wc -l`
-         f_logDebug "files in dir count is $FILES_IN_DIR_COUNT"
-         if [[ ! -z $FILES_IN_DIR_COUNT ]] && [[ $FILES_IN_DIR_COUNT -eq 0 ]] ; then
-            f_logInfo "   Bypassing docs and no folders left to process - no move required "
-            DO_FOLDER_MOVE=N
-            f_logInfo "   Deleting PRE_OCR_FOLDER $PRE_OCR_DIR/$BATCHNAME"
-            rm -r $PRE_OCR_DIR/$BATCHNAME
-         fi
-      fi
-
-      #No need to move folder if all files have already been copied over
-      if [[ $DO_FOLDER_MOVE == "Y" ]] ; then
-         #Move temp folder to HOT folder
-         f_logInfo "   moving $PRE_OCR_DIR/$BATCHNAME to $HOT_FOLDER_DIR"
-         mv $PRE_OCR_DIR/$BATCHNAME $HOT_FOLDER_DIR
-      fi
-
-      #If bypassing OCR for batch only, set hot folder back to correct value
-      if [[ $BYPASS_OCR_FOR_BATCH == "Y" ]] ; then
-         HOT_FOLDER_DIR=$HOT_FOLDER_DIR_STARTING_VALUE
-         BYPASS_OCR_FOR_BATCH="N"
-         f_logInfo "   setting HOT_FOLDER back to $HOT_FOLDER_DIR"
-      fi
-
-      f_logInfo "========== Batch $BATCHNAME has been processed ============="
    fi
+
+   DO_FOLDER_MOVE=Y
+
+   #If allowing Docs to be bypassed, check there are any files to OCR before moving to HOT FOLDER
+   if [[ $BYPASS_OCR_FOR_BATCH == "N" ]] && [[ $ALLOW_DOC_BYPASS == "Y" ]] ; then
+      f_logDebug "batch not being bypassed and allow doc bypass is true - checking if any files need processing ..."
+      FILES_IN_DIR_COUNT=`ls $PRE_OCR_DIR/$BATCHNAME | wc -l`
+      f_logDebug "files in dir count is $FILES_IN_DIR_COUNT"
+      if [[ ! -z $FILES_IN_DIR_COUNT ]] && [[ $FILES_IN_DIR_COUNT -eq 0 ]] ; then
+         f_logInfo "   Bypassing docs and no folders left to process - no move required "
+         DO_FOLDER_MOVE=N
+         f_logInfo "   Deleting PRE_OCR_FOLDER $PRE_OCR_DIR/$BATCHNAME"
+         rm -r $PRE_OCR_DIR/$BATCHNAME
+      fi
+   fi
+
+   #No need to move folder if all files have already been copied over
+   if [[ $DO_FOLDER_MOVE == "Y" ]] ; then
+      #Move temp folder to HOT folder
+      f_logInfo "   moving $PRE_OCR_DIR/$BATCHNAME to $HOT_FOLDER_DIR"
+      mv $PRE_OCR_DIR/$BATCHNAME $HOT_FOLDER_DIR
+   fi
+
+   #If bypassing OCR for batch only, set hot folder back to correct value
+   if [[ $BYPASS_OCR_FOR_BATCH == "Y" ]] ; then
+      HOT_FOLDER_DIR=$HOT_FOLDER_DIR_STARTING_VALUE
+      BYPASS_OCR_FOR_BATCH="N"
+      f_logInfo "   setting HOT_FOLDER back to $HOT_FOLDER_DIR"
+   fi
+
+   f_logInfo "========== Batch $BATCHNAME has been processed ============="
+
 done
 
 f_logInfo "Starting cleardown of processed batch directories "
