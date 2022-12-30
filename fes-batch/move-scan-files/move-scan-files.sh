@@ -228,7 +228,7 @@ do
                   done
 
                   if [[ $BYPASS_THIS_SUBFOLDER == "Y" ]] ; then
-                     f_logInfo "   bypassing OCR for subfolder $subfile as if contains an image over $DOC_BYPASS_SIZE_THRESHOLD - moving to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
+                     f_logInfo "   bypassing OCR for subfolder $subfile as it contains an image over $DOC_BYPASS_SIZE_THRESHOLD - moving to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
 
                      #check if batch folder exists in POST OCR directory - if not, create
                      if ! [ -d $BATCH_POST_OCR_DIR/$BATCHNAME ] ; then
@@ -236,7 +236,7 @@ do
                      fi
 
                      #Move subfolder to post OCR folder
-                     f_logInfo "   moving" $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
+                     f_logInfo "   moving $subfolder to $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile"
                      mv $subfolder $BATCH_POST_OCR_DIR/$BATCHNAME/$subfile
                   fi
                fi
