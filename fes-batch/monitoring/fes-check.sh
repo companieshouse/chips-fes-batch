@@ -28,8 +28,6 @@ if [ -z "${FES_SQLPLUS_CONN_STRING}" ]; then
 fi
 
 OUTFILE=/apps/fes/monitoring/fes-check.out
-#Empty .out file
-> $OUTFILE
 
 #Function to print each report as required
 printReport() {
@@ -65,31 +63,31 @@ EOF
 
    exit_code=$?
    if [ $exit_code -ne 0 ]; then
-      echo "Error generating fes check report " >> $OUTFILE
-      echo -e $result >> $OUTFILE
+      echo "Error generating fes check report "
+      echo -e $result
    else
-      echo -e $result >> $OUTFILE
+      echo -e $result
    fi
 
-   echo "Checking for unprocessed folders ...." >> $OUTFILE
+   echo "Checking for unprocessed folders ...."
    for folder in Batches_DATA Batches_PRE_OCR Batches_POST_OCR Batches_PROCESSING_FAILED
    do
       for data_files in $(find $HOME/data/$folder/. -name 'ENW_*' )
       do
-         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate" >> $OUTFILE
+         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate"
       done
       for data_files in $(find $HOME/data/$folder/. -name 'SC*' )
       do
-         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate" >> $OUTFILE
+         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate"
       done
       for data_files in $(find $HOME/data/$folder/. -name 'NI_*' )
       do
-         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate" >> $OUTFILE
+         echo " "$folder "contains unprocessed folder " $(basename $data_files) " - please investigate"
       done
    done
 }
 
-printReport
+printReport > $OUTFILE
 
 f_logInfo "FES check report generated:"
 cat $OUTFILE | while IFS= read -r line; do f_logInfo "$line"; done
