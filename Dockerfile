@@ -15,7 +15,7 @@ RUN yum -y install gettext && \
 
 RUN mkdir -p /apps && \
     chmod a+xr /apps && \
-    useradd -d ${FES_HOME} -m -s /bin/bash fes
+    useradd -u 2001 -d ${FES_HOME} -m -s /bin/bash fes
 
 USER fes
 
