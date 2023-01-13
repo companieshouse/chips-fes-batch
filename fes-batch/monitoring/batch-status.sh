@@ -1,10 +1,8 @@
 #!/bin/bash
 
 cd /apps/fes/monitoring
-# load variables created from setCron script - being careful not to overwrite HOME as msmtp mail process uses it to find config
-KEEP_HOME=${HOME}
+# load variables created from setCron script
 source /apps/fes/env.variables
-HOME=${KEEP_HOME}
 
 # Set up mail config for msmtp & load alerting functions
 envsubst <../.msmtprc.template >../.msmtprc

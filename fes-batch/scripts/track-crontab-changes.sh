@@ -2,10 +2,8 @@
 
 cd ${HOME}/scripts
 
-# load variables created from setCron script - being careful not to overwrite HOME as msmtp mail process uses it to find config
-KEEP_HOME=${HOME}
+# load variables created from setCron script
 source ${HOME}/env.variables
-HOME=${KEEP_HOME}
 
 # Set up mail config for msmtp & load alerting functions
 envsubst < ${HOME}/.msmtprc.template > ${HOME}/.msmtprc
