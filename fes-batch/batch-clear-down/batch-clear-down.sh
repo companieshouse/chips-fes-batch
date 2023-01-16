@@ -17,10 +17,8 @@
 
 cd /apps/fes/batch-clear-down
 
-# load variables created from setCron script - being careful not to overwrite HOME as msmtp mail process uses it to find config
-KEEP_HOME=${HOME}
+# load variables created from setCron script
 source /apps/fes/env.variables
-HOME=${KEEP_HOME}
 
 # create properties file and substitutes values
 envsubst <batch-clear-down.properties.template >batch-clear-down.properties
