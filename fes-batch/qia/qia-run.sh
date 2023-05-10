@@ -11,7 +11,7 @@
 # This script carries out the following steps:
 #  1. queries a database (via SSH and SCP) to obtain a list of scanned images that need manual review
 #  2. looks for a corresponding folder in /apps/fes/qia/images for each image:
-#  2.a  if found skips and checks next image
+#  2.a  if found, skips this image and moves on to check next image
 #  2.b  if not found, creates the folder and then copies the image from the image server to the /apps/fes/qia/breaches folder
 #
 
