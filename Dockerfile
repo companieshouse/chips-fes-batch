@@ -9,6 +9,7 @@ RUN yum -y install gettext && \
     yum -y install oracle-instantclient-basic && \
     yum -y install oracle-instantclient-sqlplus && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum -y install openssh-clients && \
     yum -y install msmtp && \
     yum clean all && \
     rm -rf /var/cache/yum
