@@ -12,7 +12,7 @@ source ../scripts/alert_functions
 # set up logging
 LOGS_DIR=../logs/move-scan-files
 mkdir -p ${LOGS_DIR}
-LOG_FILE="${LOGS_DIR}/${HOSTNAME}-move-scan-files-$(date +'%Y-%m-%d_%H-%M-%S').log"
+LOG_FILE="${LOGS_DIR}/${HOSTNAME}-move-scan-files-$(date +'%Y-%m-%d').log"
 source /apps/fes/scripts/logging_functions
 
 exec >>${LOG_FILE} 2>&1
