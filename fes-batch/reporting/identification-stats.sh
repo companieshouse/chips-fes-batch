@@ -63,5 +63,8 @@ else
    email_report_f "${FES_IDENTIFICATION_STATS_REP_MAIL_LIST}" "Identification Stats $REPORT_TYPE `date '+%d/%m/%Y'`" "$(uuencode  ${OUTFILE} identification-stats-$REPORT_TYPE.csv)"
 fi
 
+f_logInfo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+
 exit 0
 

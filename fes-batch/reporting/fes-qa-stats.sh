@@ -66,5 +66,8 @@ else
    email_report_f "${FES_QA_STATS_REP_MAIL_LIST}" "$REPORT_TYPE FES QA Stats `date '+%d/%m/%Y'`" "$(uuencode  ${OUTFILE} fes-qa-stats_$REPORT_TYPE.csv)"
 fi
 
+f_logInfo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+
 exit 0
 
