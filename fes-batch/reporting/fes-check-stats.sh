@@ -26,17 +26,21 @@ if [ -z "${FES_SQLPLUS_CONN_STRING}" ]; then
 fi
 
 REPORT_TYPE="cardiff"
+FES_CHECK_STATS_REP_MAIL_LIST="${FES_CHECK_STATS_CAR_REP_MAIL_LIST}"
 # by default the report is daily if the user passes -c then it will be cardiff
 USAGE="Usage: $(basename $0) [-c|-cardiff, -b|-belfast, -s|-scotland] stats report"
 case "$1" in
     -c|-cardiff)
         REPORT_TYPE="cardiff"
+        FES_CHECK_STATS_REP_MAIL_LIST="${FES_CHECK_STATS_CAR_REP_MAIL_LIST}"
         ;;
     -b|-belfast)
         REPORT_TYPE="belfast"
+        FES_CHECK_STATS_REP_MAIL_LIST="${$FES_CHECK_STATS_BEL_REP_MAIL_LIST}"
         ;;
     -s|-scotland)
         REPORT_TYPE="scotland"
+        FES_CHECK_STATS_REP_MAIL_LIST="${$FES_CHECK_STATS_SCO_REP_MAIL_LIST}"
         ;;                
      -h|-help|-?)
        echo "$USAGE"
@@ -64,7 +68,7 @@ if [ $exit_code -ne 0 ]; then
    email_FES_group_f "FES Check FES Check Stats reports failure" "FES Check FES Check Stats reports failure, please investigate"
 else
    f_logInfo "FES check FES Check Stats reports generated:"
-   email_report_f "${FES_IDENTIFICATION_STATS_REP_MAIL_LIST}" "${REPORT_TYPE^} FES Check Stats `date '+%d/%m/%Y'`" "$(uuencode  ${OUTFILE} fes-check-stats-$REPORT_TYPE.csv)"
+   email_report_f "${FES_CHECK_STATS_REP_MAIL_LIST}" "${REPORT_TYPE^} FES Check Stats `date '+%d/%m/%Y'`" "$(uuencode  ${OUTFILE} fes-check-stats-$REPORT_TYPE.csv)"
 fi
 
 f_logInfo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
