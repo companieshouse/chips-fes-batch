@@ -223,7 +223,7 @@ SQL_RESULT=$(echo "$?")
 # =================================================================================
 
 if [ "$SQL_RESULT" -ne 0 ]; then
-   email_FES_group_f "ERROR: ${PROGNAME}@${PROGHOST}" "batch-clear-down.sh Failed. Please check log file ${LOG_FILE}!"
+   email_CSI_FES_group_f "ERROR: ${PROGNAME}@${PROGHOST}" "batch-clear-down.sh Failed. Please check log file ${LOG_FILE}!"
    f_logError "ERROR: batch-clear-down.sh - Failed."
    return 1
 else
