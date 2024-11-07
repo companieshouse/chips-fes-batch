@@ -16,6 +16,14 @@ check_email_address_defined_f ()
   fi
 }
 
+check_csi_email_address_defined_f ()
+{
+  if [ -z "${EMAIL_ADDRESS_CSI}" ]; then
+    echo `date`": Unable to send email alert - no address set in EMAIL_ADDRESS_CSI."
+    return 1
+  fi
+}
+
 ##
 ## This function will send string via email to FES group.
 ## This function accepts accepts two arguments.
@@ -32,6 +40,26 @@ email_FES_group_f ()
     echo -e "To:${EMAIL_ADDRESS_FES}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
     if [[ ${LIVE_ENVIRONMENT} == "true" ]]; then
       echo -e "To:${EMAIL_ADDRESS_SERVICE_NOW}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    fi
+  fi
+}
+
+email_CSI_FES_group_f ()
+{
+  if check_email_address_defined_f; then
+    echo -e "To:${EMAIL_ADDRESS_FES},${EMAIL_ADDRESS_CSI}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    if [[ ${LIVE_ENVIRONMENT} == "true" ]]; then
+      echo -e "To:${EMAIL_ADDRESS_SERVICE_NOW}\nFrom:${EMAIL_ADDRESS_FES}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    fi
+  fi
+}
+
+email_CSI_group_f ()
+{
+  if check_csi_email_address_defined_f; then
+    echo -e "To:${EMAIL_ADDRESS_CSI}\nFrom:${EMAIL_ADDRESS_CSI}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
+    if [[ ${LIVE_ENVIRONMENT} == "true" ]]; then
+      echo -e "To:${EMAIL_ADDRESS_SERVICE_NOW}\nFrom:${EMAIL_ADDRESS_CSI}\nSubject:FES Alert: $1\n\n${LOCATION_STRING}\n\n$2\n\n" | msmtp -t
     fi
   fi
 }
