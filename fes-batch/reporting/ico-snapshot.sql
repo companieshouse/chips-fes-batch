@@ -8,7 +8,7 @@ set colsep ,
 spool &spool_file
 
 
-select form_barcode, form_barcode_date, batch_name
+select trim(form_barcode)||','||trim(form_barcode_date)||','||trim(batch_name)
             from form f inner join envelope e on e.envelope_id = f.form_envelope_id
                         inner join batch b on b.batch_id = e.envelope_batch_id
                         inner join form_status_type fst on fst.form_status_type_id = f.form_status
