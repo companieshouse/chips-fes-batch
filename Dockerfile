@@ -1,7 +1,7 @@
 FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/ch-serverjre:1.2.5
 
 ENV FES_HOME=/apps/fes \
-    ARTIFACTORY_BASE_URL=http://repository.aws.chdev.org:8081/artifactory
+    ARTIFACTORY_BASE_URL=https://artifactory.companieshouse.gov.uk/artifactory/virtual-release
 
 RUN yum -y install gettext && \
     yum -y install cronie && \
@@ -27,7 +27,7 @@ COPY --chown=fes fes-batch ${FES_HOME}/
 # Download the batch libs and set permission on scripts
 RUN mkdir -p ${FES_HOME}/libs && \
     cd ${FES_HOME}/libs && \
-    curl ${ARTIFACTORY_BASE_URL}/local-ch-release/uk/gov/companieshouse/fes-file-loader/1.2.0/fes-file-loader-1.2.0.jar -o ../fes-file-loader/fes-file-loader.jar && \
+    curl ${ARTIFACTORY_BASE_URL}/uk/gov/companieshouse/fes-file-loader/1.2.0/fes-file-loader-1.2.0.jar -o ../fes-file-loader/fes-file-loader.jar && \
     chmod -R 750 ${FES_HOME}/*
 
 WORKDIR $FES_HOME
