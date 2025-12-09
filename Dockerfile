@@ -43,9 +43,20 @@ RUN dnf install -y oracle-instantclient-release-el8 && \
         oracle-instantclient-sqlplus \
         gettext \
         cronie \
-        openssh-clients \
-        sharutils \
-        msmtp && \
+        openssh-clients && \
+    \
+    # Enable CodeReady Builder repo (for sharutils)
+    dnf config-manager --set-enabled ol8_codeready_builder && \
+    dnf install -y sharutils && \
+    \
+    # Enable Oracle EPEL (Developer EPEL)
+    dnf config-manager --set-enabled ol8_developer_EPEL || true && \
+    \
+    # installing msmtp from OL8 Developer EPEL
+    (dnf install -y msmtp || \
+        (echo 'msmtp not present in Oracle EPEL, installing from Fedora EPEL'; \
+         dnf install -y epel-release && dnf install -y msmtp)) && \
+    \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
