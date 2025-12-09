@@ -36,26 +36,21 @@ FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/ch-serverjre:2.0.0
 
 ENV FES_HOME=/apps/fes
 
-# Install OL8 packages
-RUN dnf install -y oracle-instantclient-release-el8 && \
-    dnf install -y \
+# Install required OL8 packages
+RUN dnf install oracle-instantclient-release-el8 && \
+    dnf install \
         oracle-instantclient-basic \
         oracle-instantclient-sqlplus \
         gettext \
         cronie \
         openssh-clients && \
     \
-    # Enable CodeReady Builder repo (for sharutils)
-    dnf config-manager --set-enabled ol8_codeready_builder && \
-    dnf install -y sharutils && \
+    # Install sharutils from CodeReady Builder repo
+    dnf --enablerepo=ol8_codeready_builder install sharutils && \
     \
-    # Enable Oracle EPEL (Developer EPEL)
-    dnf config-manager --set-enabled ol8_developer_EPEL || true && \
-    \
-    # installing msmtp from OL8 Developer EPEL
-    (dnf install -y msmtp || \
-        (echo 'msmtp not present in Oracle EPEL, installing from Fedora EPEL'; \
-         dnf install -y epel-release && dnf install -y msmtp)) && \
+    # Install msmtp from EPEL
+    dnf install epel-release && \
+    dnf install msmtp && \
     \
     dnf clean all && \
     rm -rf /var/cache/dnf
