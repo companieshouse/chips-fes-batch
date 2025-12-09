@@ -44,10 +44,8 @@ RUN dnf install -y oracle-instantclient-release-el8 && \
         gettext \
         cronie \
         openssh-clients \
-        xmlstarlet \
-        dos2unix \
-        jq \
-        ftp && \
+        sharutils \
+        msmtp && \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
