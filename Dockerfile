@@ -1,8 +1,7 @@
-# Pipeline validation change
 #############################
 # 1) BUILDER STAGE
 #############################
-FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/ch-serverjre:2.0.0 AS builder
+FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.0 AS builder
 
 # These ARGS are NOT stored in final image
 ARG ARTIFACTORY_URL
@@ -26,14 +25,14 @@ RUN mkdir -p ${FES_HOME}/libs && \
     mkdir -p ${FES_HOME}/fes-file-loader && \
     cd ${FES_HOME}/libs && \
     curl -L -u "${ARTIFACTORY_USERNAME}:${ARTIFACTORY_PASSWORD}" \
-        "${ARTIFACTORY_BASE_URL}/uk/gov/companieshouse/fes-file-loader/2.0.0/fes-file-loader-2.0.0.jar" \
+        "${ARTIFACTORY_BASE_URL}/uk/gov/companieshouse/fes-file-loader/2.0.3/fes-file-loader-2.0.3.jar" \
         -o ${FES_HOME}/fes-file-loader/fes-file-loader.jar && \
     chmod -R 750 ${FES_HOME}/*
 
 #############################
 # 2) RUNTIME STAGE
 #############################
-FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/ch-serverjre:2.0.0
+FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.0
 
 ENV FES_HOME=/apps/fes
 
