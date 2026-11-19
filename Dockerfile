@@ -1,7 +1,7 @@
 #############################
 # 1) BUILDER STAGE
 #############################
-FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.0 AS builder
+FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.1 AS builder
 
 # These ARGS are NOT stored in final image
 ARG ARTIFACTORY_URL
@@ -32,7 +32,7 @@ RUN mkdir -p ${FES_HOME}/libs && \
 #############################
 # 2) RUNTIME STAGE
 #############################
-FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.0
+FROM 300288021642.dkr.ecr.eu-west-2.amazonaws.com/chips-openjdk:1.0.1
 
 ENV FES_HOME=/apps/fes
 
